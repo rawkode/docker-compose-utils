@@ -1,0 +1,75 @@
+#!/bin/bash
+
+usage() {
+    echo "Usage: $0 <command>" 1>&2;
+    echo
+    echo -e "\tOptional Flags:"
+    echo -e "\t  -s <service-name>\tSpecify the service to use"
+    echo -e "\t  -e <enviroment>\tSpecify an environment (Defaults to 'dev')"
+    echo -e "\t  -u <user>\tSpecify which user, within the container, to use"
+    echo -e "\t  -d \t\t\tShow debug information"
+    exit 1;
+}
+
+if [[ $# -eq 0 ]] ; then
+    usage
+fi
+
+if [[ ! -f docker-compose.yml ]];
+then
+    echo -e "\e[1m\e[91mWarning\e[0m: This command MUST be run inside a of docker-compose project (docker-compose.yml must exist)\n\n"
+
+    usage
+    exit 1
+fi
+
+debug=false
+
+while getopts "s::de:u::" options; do
+    case "${options}" in
+        s)
+            container=${OPTARG}
+            ;;
+        e)
+            environment=${OPTARG}
+            ;;
+        d)
+            debug=true
+            ;;
+        u)
+            user=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+command="docker-compose -f docker-compose.yml "
+
+if [ ! -z "${environment}" ]; then
+    command="${command} -f docker-compose.${environment}.yml "
+fi
+
+command="${command} run "
+
+if [ -z "${container}" ];
+then
+    container="application"
+fi
+
+if [ ! -z "${user}" ]; then
+    command="${command} --user='${user}' "
+fi
+
+command="${command} --entrypoint='sh -c ' ${container} '$@'"
+
+echo -e "Executing ... [ Environment: \e[1m\e[91m${environment}\e[0m ] on container '\e[1m\e[91m${container}\e[0m'  '\e[1m\e[92m$@\e[0m'\n"
+
+if [ "${debug}" == "true" ]; then
+    echo -e "[ Debug ] Executing command: ${command}\n"
+fi
+
+eval $command
+
