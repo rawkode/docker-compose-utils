@@ -1,9 +1,4 @@
-#!/bin/sh
-if [[ `uname` == 'Linux' ]];
-then
-    echo "  -- You appear to be running Linux; you do not need to sync files to a Docker Machine"
-    exit
-fi
+#!/bin/bash
 
 command -v docker-machine > /dev/null 2>&1
 if [[ $? -ne 0 ]];
