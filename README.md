@@ -50,3 +50,16 @@ Executing ... [ Environment:  ] on container 'httpd'  'whoami'
 
 www-data
 ```
+
+### Are you extending compose files? You filthy animal!
+
+Use the environment toggle! `-e test` and `-d` to show debug output, that displays the command being run:
+
+```
+Executing ... [ Environment: test ] on container 'application'  'whoami'
+
+[ Debug ] Executing command: docker-compose -f docker-compose.yml  -f docker-compose.test.yml  run  --entrypoint='sh -c ' application 'whoami'
+
+root
+
+```
