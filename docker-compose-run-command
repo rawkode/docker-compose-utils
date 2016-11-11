@@ -63,13 +63,12 @@ if [ ! -z "${user}" ]; then
     command="${command} --user='${user}' "
 fi
 
-command="${command} --entrypoint='sh -c ' ${container} '$@'"
+command="${command} --entrypoint='sh -c ' ${container} '$*'"
 
-echo -e "Executing ... [ Environment: \e[1m\e[91m${environment}\e[0m ] on container '\e[1m\e[91m${container}\e[0m'  '\e[1m\e[92m$@\e[0m'\n"
+echo -e "Executing ... [ Environment: \e[1m\e[91m${environment}\e[0m ] on container '\e[1m\e[91m${container}\e[0m'  '\e[1m\e[92m$*\e[0m'\n"
 
 if [ "${debug}" == "true" ]; then
     echo -e "[ Debug ] Executing command: ${command}\n"
 fi
 
-eval $command
-
+eval "$command"
