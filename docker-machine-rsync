@@ -1,34 +1,36 @@
 #!/bin/bash
 
-command -v docker-machine > /dev/null 2>&1
-if [[ $? -ne 0 ]];
+if ! command -v docker-machine > /dev/null 2>&1;
 then
     echo "  - You do not appear to have docker-machine installed - perhaps it's not in your PATH?"
-    exit
+    exit 1
 fi
 
-docker-machine active > /dev/null 2>&1
-if [[ $? -ne 0 ]];
+if ! docker-machine active > /dev/null 2>&1;
 then
     echo "  - There is no active docker-machine. Please run: eval \"\$(docker-machine env <machine-name>)\""
-    exit
+    exit 1
 fi
 
-command -v watch > /dev/null 2>&1
-if [[ $? -ne 0 ]];
+
+if ! command -v watch > /dev/null 2>&1;
 then
     echo "  - You do not appear to have watch installed - perhaps it's not in your PATH?"
-    exit
+    exit 1
 fi
 
-ssh-add ~/.docker/machine/machines/`docker-machine active`/id_rsa
+declare -r ACTIVE_MACHINE="$(docker-machine active)"
+declare -r WORKING_DIRECTORY="$(pwd)"
+declare EXCLUDE_FLAGS=""
 
-docker-machine ssh `docker-machine active` tce-load -wi rsync
-docker-machine ssh `docker-machine active` "sudo mkdir -p `pwd` && sudo chown docker:docker -R `pwd`"
+ssh-add "$HOME/.docker/machine/machines/${ACTIVE_MACHINE}/id_rsa"
+
+docker-machine ssh "$ACTIVE_MACHINE" tce-load -wi rsync
+docker-machine ssh "$ACTIVE_MACHINE" "sudo mkdir -p $WORKING_DIRECTORY && sudo chown docker:docker -R $WORKING_DIRECTORY"
 
 if [[ -f '.rsyncignore' ]];
 then
-    watch -n1 rsync --exclude-from='.rsyncignore' -rlptDv ./ docker@`docker-machine ip $(docker-machine active)`:`pwd`
-else
-    watch -n1 rsync -rlptDv ./ docker@`docker-machine ip $(docker-machine active)`:`pwd`
+	EXCLUDE_FLAGS="--exclude-from='.rsyncignore'"
 fi
+
+watch -n1 rsync "$EXCLUDE_FLAGS" -rlptDv ./ "docker@$(docker-machine ip "$ACTIVE_MACHINE"):$WORKING_DIRECTORY"
